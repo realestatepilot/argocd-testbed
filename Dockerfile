@@ -29,8 +29,8 @@ COPY --from=tools /apps/ /usr/local/bin/
 
 RUN apt-get update
 
-# install git
-RUN apt-get install -y git
+# install git, gpg
+RUN apt-get install -y git gpg nano vim tinyproxy
 
  # install helm
 RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -38,8 +38,10 @@ RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | b
 # helm secrets
 RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
 
-
-COPY argocd-server-bootstrap/ /argocd/
+COPY argocd-server-bootstrap/.*key.gpg /argocd/
+COPY argocd-server-bootstrap/startup-argocd.sh argocd-server-bootstrap/secret-argocd-values.yaml  /argocd/
 RUN chmod +x argocd/startup-argocd.sh
+
+COPY argocd-server-bootstrap/tinyproxy.conf /etc/tinyproxy/
 
 ENTRYPOINT ["argocd/startup-argocd.sh"]
