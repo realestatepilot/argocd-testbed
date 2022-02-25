@@ -1,0 +1,89 @@
+global:
+    # abweichendes repo für integration des helm secrets plugin
+    image:
+
+        # 2.2.3 ist die letzte version, die sops mit age unterstützt
+        tag: v2.2.3
+
+        # tag: master
+        imagePullPolicy: IfNotPresent
+
+server:
+    extraArgs:
+        - --insecure
+    ingress:
+        enabled: true
+        ingressClassName: nginx
+        # annotations:
+        #     kubernetes.io/tls-acme: "true"
+        hosts:
+            - argocd.ubuntu.localhost
+    rbacConfig:
+        policy.default: role:readonly
+        # verweist auf die default eingebaute admin-rolle
+        policy.csv: |
+            g, resp-kubernetes-admin, role:admin
+        #   # p, role:org-admin, applications, *, */*, allow
+
+    configEnabled: true
+    config:
+        url: http://argocd.ubuntu.localhost:8080
+        dex.config: |
+            connectors:
+              - type: ldap
+                id: ldap
+                name: LDAP
+                config:
+                  # beispiel für passwort-übergabe aus env-datei (ab dex 2.28)
+                  # dummy: {{ getenv "HOSTNAME" "http://127.0.0.1:5556/dex" }}
+                  # secrets defined in argocd-secrets
+                  host: $LDAP_HOST
+                  bindDN: $LDAP_BIND_DN
+                  bindPW: $LDAP_BIND_PW
+                  usernamePrompt: "Anmeldename"
+                  userSearch:
+                    baseDN: dc=evermind,dc=de
+                    # Optional filter to apply when searching the directory.
+                    filter: "(objectClass=person)"
+                    # username attribute used for comparing user entries. This will be translated
+                    # and combined with the other filter as "(<attr>=<username>)".
+                    username: uid
+                    # The following three fields are direct mappings of attributes on the user entry.
+                    # String representation of the user.
+                    idAttr: uidNumber
+                    # Required. Attribute to map to Email.
+                    emailAttr: mail
+                    # Maps to display name of users. No default value.
+                    nameAttr: displayName
+                  # Group search queries for groups given a user entry.
+                  groupSearch:
+                    # BaseDN to start the search from. It will translate to the query
+                    # "(&(objectClass=groupOfUniqueNames)(uniqueMember=<user uid>))".
+                    baseDN: ou=Gruppen,dc=evermind,dc=de
+                    # Optional filter to apply when searching the directory.
+                    # filter: "(objectClass=groupOfUniqueNames)"
+                    # Following list contains field pairs that are used to match a user to a group. It adds an additional
+                    # requirement to the filter that an attribute in the group must match the user's
+                    # attribute value.
+                    userMatchers:
+                    - userAttr: DN
+                      groupAttr: uniqueMember
+                    # Represents group name.
+                    nameAttr: cn
+repoServer:
+    # extraArgs:
+    #     - --repo-cache-expiration
+    #     - 10m
+    ## Additional volumeMounts for gpg key import
+    volumeMounts:
+        - name: gpg-secret
+          mountPath: /home/argocd/gpg
+        - name: age-secret
+          mountPath: /home/argocd/age
+    volumes:
+        - name: gpg-secret
+          secret:
+            secretName: gpg-key
+        - name: age-secret
+          secret:
+            secretName: age-key

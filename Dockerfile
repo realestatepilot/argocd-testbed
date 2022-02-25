@@ -38,10 +38,9 @@ RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | b
 # helm secrets
 RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
 
-COPY argocd-server-bootstrap/.*key.gpg /argocd/
-COPY argocd-server-bootstrap/startup-argocd.sh argocd-server-bootstrap/secret-argocd-values.yaml  /argocd/
-RUN chmod +x argocd/startup-argocd.sh
+COPY startup-argocd.sh /
+RUN chmod +x /startup-argocd.sh
 
-COPY argocd-server-bootstrap/tinyproxy.conf /etc/tinyproxy/
+COPY tinyproxy.conf /etc/tinyproxy/
 
-ENTRYPOINT ["argocd/startup-argocd.sh"]
+ENTRYPOINT ["/startup-argocd.sh"]
