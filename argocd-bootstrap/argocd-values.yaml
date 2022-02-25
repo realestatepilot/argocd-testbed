@@ -97,15 +97,57 @@ repoServer:
     #     - --repo-cache-expiration
     #     - 10m
     ## Additional volumeMounts for gpg key import
-    volumeMounts:
-        - name: gpg-secret
-          mountPath: /home/argocd/gpg
-        - name: age-secret
-          mountPath: /home/argocd/age
-    volumes:
-        - name: gpg-secret
-          secret:
-            secretName: gpg-key
-        - name: age-secret
-          secret:
-            secretName: age-key
+
+  env:
+    - name: HELM_PLUGINS
+      value: /custom-tools/helm-plugins/
+    - name: HELM_SECRETS_HELM_PATH
+      value: /usr/local/bin/helm
+    - name: HELM_SECRETS_SOPS_PATH
+      value: /custom-tools/sops
+    - name: HELM_SECRETS_KUBECTL_PATH
+      value: /custom-tools/kubectl
+  volumes:
+    - name: custom-tools
+      emptyDir: {}
+    - name: gpg-secret
+      secret:
+        secretName: gpg-key
+        # secretName: tenant1.key.gpg
+    - name: age-secret
+      secret:
+        secretName: age-key
+        # secretName: tenant1.key.age
+  volumeMounts:
+    - mountPath: /custom-tools
+      name: custom-tools
+    - name: gpg-secret
+      mountPath: /tenant1.key.gpg
+      subPath: tenant1.key.gpg
+    - name: age-secret
+      mountPath: /tenant1.key.age
+      subPath: tenant1.key.age
+
+  initContainers:
+    - name: download-tools
+      image: alpine:latest
+      command: [sh, -ec]
+      env:
+        - name: HELM_SECRETS_VERSION
+          value: "3.12.0"
+        - name: SOPS_VERSION
+          value: "3.7.1"
+        - name: KUBECTL_VERSION
+          value: "1.22.0"
+      args:
+        - |
+          mkdir -p /custom-tools/helm-plugins
+          wget -qO- https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz | tar -C /custom-tools/helm-plugins -xzf-;
+
+          wget -qO /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
+          wget -qO /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+
+          chmod +x /custom-tools/*
+      volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools
