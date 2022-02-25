@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: content-configmap
+data:
+  index.html: |-
+    <html>
+    <body>
+    <h1>Argo decryption content example</h1>
+    <p>
+    via GPG: { {.Values.gpg.content} }
+    </p>
+    <p>
+    via AGE: { {.Values.age.content} }
+    </p>
+    </body
+    </html>
+

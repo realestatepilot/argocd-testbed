@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: in-cluster-nginx
+  namespace: argocd
+spec:
+  project: default
+  source:
+    helm:
+      valueFiles:
+        - values.yaml
+
+    repoURL: https://github.com/realestatepilot/argocd-testbed.git
+    targetRevision: main
+    path: "helm-charts/nginx"
+    
+  destination:
+    name: in-cluster
+    namespace: nginx
+  info:
+    - name: url
+      value: http://nginx.ubuntu.localhost:8080
+
+  syncPolicy:
+    automated:
+      prune: true
+      # statt auto-update hier lieber manuell auf seine neue Version aufmerksam gemacht werden
+      # selfHeal: true
+      allowEmpty: true      
+    syncOptions:
+    - CreateNamespace=true

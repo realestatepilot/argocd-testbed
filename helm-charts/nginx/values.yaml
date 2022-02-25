@@ -1,0 +1,7 @@
+nginx:
+  staticSiteConfigmap: content-configmap
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    hostname: nginx.ubuntu.localhost

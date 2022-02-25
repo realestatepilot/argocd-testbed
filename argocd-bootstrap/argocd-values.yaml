@@ -70,6 +70,28 @@ server:
                       groupAttr: uniqueMember
                     # Represents group name.
                     nameAttr: cn
+
+    additionalApplications:
+        - name: nginx
+          # namespace: istio-operator
+          #   additionalLabels: {}
+          #   additionalAnnotations: {}
+          project: default
+          source:
+            repoURL: https://github.com/realestatepilot/argocd-testbed.git
+            targetRevision: main
+            path: "argocd-apps/"
+            directory:
+              recurse: true
+          destination:
+            server: https://kubernetes.default.svc
+            namespace: nginx
+          syncPolicy:
+            automated:
+                prune: true
+                selfHeal: true
+
+
 repoServer:
     # extraArgs:
     #     - --repo-cache-expiration
