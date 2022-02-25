@@ -28,16 +28,18 @@ kubectl rollout status -n ingress-nginx deployment.apps/ingress-nginx-controller
 # setup local gpg - just for inital bootload argo with some secret content (LDAP, admin-pwd)
 gpg --allow-secret-key-import --import /secrets/*.key.gpg
 # setup all private age keys - needed if parts of argocd values are encrypted
-mkdir -p /root/sops/
-cat /secrets/*.key.age >> /root/sops/keys.txt
+mkdir -p /root/.config/sops/age
+cat /secrets/*.key.age >> /root/.config/sops/age/keys.txt
 
 
 # install argocd
 # optinally deploy also secret file
-if [ -f "/argocd-bootstrap/secret-argocd-values.yaml" ]; then 
-  SECRET_VALUE_FILE="-f /argocd-bootstrap/secret-argocd-values.yaml"
+if [ -f "/argocd-bootstrap/secret-argocd-values.yaml" ]; then
+  helm secrets upgrade argocd -i -n argocd -f /argocd-bootstrap/secret-argocd-values.yaml -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 3.33.3
+  # SECRET_VALUE_FILE='-f /argocd-bootstrap/secret-argocd-values.yaml'
+else
+  helm secrets upgrade argocd -i -n argocd -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 3.33.3
 fi
-helm secrets upgrade argocd -i -n argocd "$SECRET_VALUE_FILE" -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 3.33.3
 
 kubectl rollout status deployment.apps/argocd-repo-server -n argocd
 

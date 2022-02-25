@@ -7,4 +7,5 @@ docker run \
   --rm --name argocd -it --privileged -p 8080:8080 \
   -v $PWD/argocd-bootstrap:/argocd-bootstrap \
   -v $PWD/secrets:/secrets \
+  -v $PWD/helm-charts:/helm-charts \
    $(docker build -q .)

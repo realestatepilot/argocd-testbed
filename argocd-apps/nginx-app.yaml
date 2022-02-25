@@ -9,7 +9,8 @@ spec:
     helm:
       valueFiles:
         - values.yaml
-
+        - secret-values-age.yaml
+        - secret-values-gpg.yaml
     repoURL: https://github.com/realestatepilot/argocd-testbed.git
     targetRevision: main
     path: "helm-charts/nginx"

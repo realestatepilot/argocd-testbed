@@ -8,10 +8,10 @@ data:
     <body>
     <h1>Argo decryption content example</h1>
     <p>
-    via GPG: { {.Values.gpg.content} }
+    via GPG: {{.Values.gpg.content}}
     </p>
     <p>
-    via AGE: { {.Values.age.content} }
+    via AGE: {{.Values.age.content}}
     </p>
     </body
     </html>

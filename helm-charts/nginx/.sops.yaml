@@ -1,4 +1,5 @@
 creation_rules:
-  # - pgp: '65B8 61FD BD63 A497 6D16  4329 28A4 ED0A AA0B 02FD'
-  - age: 'age1vfklxarn35mg7er8tx5vnd4vsppxr44gmvm2nhp89psxc49rcv7qr6sc2g'
-    path_regex: .*age
+  - pgp: '30B1 28A6 8534 A766 A646  DCDF D1E7 6CE1 660D 14D6'
+    path_regex: -gpg\.
+  - age: 'age1s3rr0xyt337vcfdhgsqhcd587vrlwzzgvtl2v6kya3ex5m0vg9wqz3l9ld'
+    path_regex: -age\.
