@@ -12,9 +12,9 @@ NEVER use this in production or test production systems!
 ## Motivation
 
 Setting up all tools in right flavor can be challenging
-* (sops)[https://github.com/mozilla/sops]
-* (helm secrets plugin)[https://github.com/jkroepke/helm-secrets]
-* (age)[https://github.com/FiloSottile/age/]
+* [sops](https://github.com/mozilla/sops)
+* [helm secrets plugin](https://github.com/jkroepke/helm-secrets)
+* [age](https://github.com/FiloSottile/age/)
 * minikube and deployment
 
 This Docker bundles all together and all components are documented due docker file and scripts. You can test installation via browser and shell access. All needed command line tools are preconfigured.
@@ -34,7 +34,8 @@ to your local hosts file.
 Run `run.sh` and wait. Finaly you get a shell. Now look at ArgoCD GUI how argocd deploys the test app. It's nice to see  but be patient.
 
 Argocd webgui is reachable on http://argocd.ubuntu.localhost:8080, Login with admin / admin
-Demo for application with secrets on http://nginx.ubuntu.localhost:8080.
+
+See demo application with secrets on http://nginx.ubuntu.localhost:8080.
 
 All keys and deployments  are read to run without any modification just to have a quick experience with to tool.
 
