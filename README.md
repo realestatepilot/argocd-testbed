@@ -1,35 +1,42 @@
 # argocd-testbed
 
-Argocd acts as the heart of gitops driven deployments. Upgrading this can be a challenching project. You better test your setup before. This testbed can be used in situations where:
+Argocd acts as the heart of gitops driven deployments. Upgrading this can be challenging. You better test your setup before. This testbed can be used in situations where:
 * ArgoCD is used as gitops state machine
 * Secrets are handled by sops (pgp / age)
 * deployments use helm-charts if secrets are needed
 
+NEVER use this in production or test production systems!
+* changes are not persistent
+* admin password is fix, simple and unsecure
+
 ## Motivation
 
 Setting up all tools in right flavor can be challenging
-* sops
-* helm secrets plugin
-* age
-* minikube and deplyoment
+* (sops)[https://github.com/mozilla/sops]
+* (helm secrets plugin)[https://github.com/jkroepke/helm-secrets]
+* (age)[https://github.com/FiloSottile/age/]
+* minikube and deployment
 
-This Docker bundles all together and all components are documented by design. Via shell access you can test installation. 
-
+This Docker bundles all together and all components are documented due docker file and scripts. You can test installation via browser and shell access. All needed command line tools are preconfigured.
 
 ## Setup and Requirements
 
-* set your local hosts file with `127.0.0.1 *.ubuntu.localhost
-`
+To access argocd and nginx via browser append 
+`127.0.0.1 *.ubuntu.localhost`
+to your local hosts file.
 
-
-## Run testbed
+## Run argocd testbed
 
 * keep your disk usage level under ~80% or deployment will fail (kubernetes disk pressure)
 * startup takes about 5 min, downloading about 1GB
 * files in /argocd-bootstrap and /secrets are mounted into docker
 
-Run `run.sh` and wait. finaly you get a shell.
-Open a browser on http://argocd.ubuntu.localhost:8080
+Run `run.sh` and wait. Finaly you get a shell. Now look at ArgoCD GUI how argocd deploys the test app. It's nice to see  but be patient.
+
+Argocd webgui is reachable on http://argocd.ubuntu.localhost:8080, Login with admin / admin
+Demo for application with secrets on http://nginx.ubuntu.localhost:8080.
+
+All keys and deployments  are read to run without any modification just to have a quick experience with to tool.
 
 ## Features 
 
@@ -60,13 +67,11 @@ See following instructions how to handle keys. Keys for demo purposes are includ
 
 ### Age encrpytion
 
-Solution for one recipient
+on container shell this solution works for one recipient:
 
 generate key pair inside docker shell
 ```
-cd /secrets
-age-keygen -o tenant1.key.age
-cp tenant1.key.age /root/.config/sops/age/keys.txt
+age-keygen -o /secrets/tenant1.key.age
 ```
 
 #### config sops
@@ -80,11 +85,12 @@ creation_rules:
 
 
 `helm secrets enc file.yaml` encrypts file with age
+`helm secrets edit file.yaml` open default editor to edit encrypted file
 
 
 ### GPG for leagcy files
 
-#### Create new key pair
+**Create new key pair**
 
 ```
 gpg --batch --generate-key <<EOF
@@ -97,7 +103,7 @@ Expire-Date: 0
 EOF
 ```
 
-#### get fingerprint (public key)
+**get fingerprint (public key)**
 
 ```
 # gpg --fingerprint
@@ -111,16 +117,15 @@ pub   rsa3072 2022-02-25 [SC]
 uid           [ultimate] tenant1 <you@tenant1.org>
 sub   rsa3072 2022-02-25 [E]
 ```
+(line "30B1 ..." contains the public key)
 
-line "30B1 ..." contains the public key
-
-#### get secret key (aka private key)
+**get secret key (aka private key)**
 
 ```
 gpg --export-secret-key  tenant1 > /secrets/tenant1.key.gpg
 ```
 
-#### import existing secret key
+**import existing secret key**
 
 In case of sops files encrypted with gpg, import your private key
 ```
@@ -129,15 +134,22 @@ gpg --allow-secret-key-import --import /secrets/tenant1.key.gpg
 
 more on gpg see https://poweruser.blog/how-to-encrypt-secrets-in-config-files-1dbb794f7352
 
-
-
-
 # Tests
 
-run tests inside docker
+If somthing goes wrong run tests inside docker:
 
 test if argocd is running and if ingress is defined correct
-`curl -H "Host: argocd.localhost.ubuntu" http://localhost:8080`
+```
+curl -H "Host: argocd.localhost.ubuntu" http://localhost:8080
+```
 
 show encrypted content with various encryption provider
-`curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080`
+```
+curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
+```
+
+# Author
+
+Thomas Grünert (2022) on [Github](https://github.com/tgruenert) or [linkedIn](https://github.com/tgruenert)
+
+Thanks also to my current employer [RealEstatePilot AG](https://realestatepilot.com) which is supporting me on this.

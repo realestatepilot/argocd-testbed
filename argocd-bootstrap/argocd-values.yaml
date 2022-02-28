@@ -8,6 +8,12 @@ global:
         # tag: master
         imagePullPolicy: IfNotPresent
 
+configs:
+    secret:
+        createSecret: true
+        argocdServerAdminPassword: $2a$10$rf1hVgJ2kOCvqPM8iNRyQeJ44Z148amqrYKwiNEcS0JR5FIppEswe
+        argocdServerAdminPasswordMtime: "2021-05-01T10:11:12Z"
+
 server:
     extraArgs:
         - --insecure
