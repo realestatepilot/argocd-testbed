@@ -33,12 +33,12 @@ cat /secrets/*.key.age >> /root/.config/sops/age/keys.txt
 
 
 # install argocd
-# optinally deploy also secret file
+# optionally deploy also secret file
 if [ -f "/argocd-bootstrap/secret-argocd-values.yaml" ]; then
-  helm secrets upgrade argocd -i -n argocd -f /argocd-bootstrap/secret-argocd-values.yaml -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 3.33.3
+  helm secrets upgrade argocd -i -n argocd -f /argocd-bootstrap/secret-argocd-values.yaml -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 4.2.2
   # SECRET_VALUE_FILE='-f /argocd-bootstrap/secret-argocd-values.yaml'
 else
-  helm secrets upgrade argocd -i -n argocd -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 3.33.3
+  helm secrets upgrade argocd -i -n argocd -f /argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 4.2.2
 fi
 
 kubectl rollout status deployment.apps/argocd-repo-server -n argocd
