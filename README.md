@@ -41,7 +41,8 @@ All keys and deployments  are read to run without any modification just to have 
 
 ## Features 
 
-* ArgoCD v2.23
+* ArgoCD v2.3.2
+* helm-secrets plugin
 * encryption via sops / gpg (2.2)
 * encryption via sops / age 
 * LDAP Authentification
@@ -148,6 +149,17 @@ show encrypted content with various encryption provider
 ```
 curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 ```
+
+# Changes
+
+## v0.2.0
+* use ArgoCD v2.3.2
+* increment sops to v3.7.2
+* add env params for helm secrets plugin
+* use standard argocd docker image
+
+## v0.1.0
+inital version for ArgoCD 2.2.4
 
 # Author
 

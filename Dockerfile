@@ -5,10 +5,11 @@ WORKDIR /apps
 RUN apk update
 RUN apk add curl
 
-# install sops
-RUN wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux
-RUN chmod +x sops-v3.7.1.linux
-RUN mv sops-v3.7.1.linux sops
+# Tools to run argocd as helm-chart and using secrets therefor
+# install sops 
+RUN wget https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.linux
+RUN chmod +x sops-v3.7.2.linux
+RUN mv sops-v3.7.2.linux sops
 
 RUN wget https://github.com/FiloSottile/age/releases/download/v1.0.0/age-v1.0.0-linux-amd64.tar.gz
 RUN tar xfvz age-v1.0.0-linux-amd64.tar.gz 
