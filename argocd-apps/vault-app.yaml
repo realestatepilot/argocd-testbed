@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: in-cluster-vault
+  namespace: argocd
+spec:
+  project: default
+  source:
+    helm:
+      values: |
+        ingress:
+          enabled: true
+          annotations:
+            kubernetes.io/ingress.class: nginx
+          hosts: 
+            - host: vault.ubuntu.localhost
+              paths: []
+        dev:
+          enabled: true
+        ui:
+          enabled: true
+    repoURL: https://helm.releases.hashicorp.com
+    targetRevision: 0.19.0
+    chart: vault
+    
+  destination:
+    name: in-cluster
+    namespace: vault
+  info:
+    - name: url
+      value: http://vault.ubuntu.localhost:8080
+
+  syncPolicy:
+    automated:
+      prune: false
+      # statt auto-update hier lieber manuell auf seine neue Version aufmerksam gemacht werden
+      # selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
