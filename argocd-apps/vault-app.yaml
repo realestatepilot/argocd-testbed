@@ -32,7 +32,13 @@ spec:
   info:
     - name: url
       value: http://vault.ubuntu.localhost:8080
-
+  
+  ignoreDifferences:
+  - group: "*"
+    kind: "*"
+    managedFieldsManagers:
+    - vault.hashicorp.com
+    
   syncPolicy:
     automated:
       prune: false
