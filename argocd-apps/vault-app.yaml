@@ -8,16 +8,17 @@ spec:
   source:
     helm:
       values: |
-        ingress:
-          enabled: true
-          annotations:
-            kubernetes.io/ingress.class: nginx
-          hosts: 
-            - host: vault.ubuntu.localhost
-              paths: []
-        dev:
-          enabled: true
-          devRootToken: mySecret
+        server:
+          ingress:
+            enabled: true
+            annotations:
+              kubernetes.io/ingress.class: nginx
+            hosts: 
+              - host: vault.ubuntu.localhost
+                paths: []
+          dev:
+            enabled: true
+            devRootToken: mySecret
         ui:
           enabled: true
     repoURL: https://helm.releases.hashicorp.com
