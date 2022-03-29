@@ -17,6 +17,7 @@ spec:
               paths: []
         dev:
           enabled: true
+          devRootToken: mySecret
         ui:
           enabled: true
     repoURL: https://helm.releases.hashicorp.com
