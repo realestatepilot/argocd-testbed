@@ -73,7 +73,7 @@ server:
                     nameAttr: cn
 
     additionalApplications:
-        - name: nginx
+        - name: app-bootstrap
           # namespace: istio-operator
           #   additionalLabels: {}
           #   additionalAnnotations: {}
