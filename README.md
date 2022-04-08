@@ -163,7 +163,15 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 * use standard argocd docker image
 
 ## v0.1.0
-inital version for ArgoCD 2.2.4
+initial version for ArgoCD 2.2.4
+
+# open tasks / missing functions
+
+## set branch for deployment globally
+
+For development issues we use branches. Also our helm-charts or application are located here. So for running a branch all applications must be configured to current branch - manually for now.
+
+According to https://github.com/argoproj/applicationset/issues/457 a matrix generator can be used to set a "global variable" for all applications. But setting a env var to argo and use this for variable substitution would also nice. 
 
 # Author
 

@@ -64,10 +64,12 @@ spec:
       value: http://vault.ubuntu.localhost:8080
   
   ignoreDifferences:
-  - group: "*"
-    kind: "*"
-    managedFieldsManagers:
-    - vault.hashicorp.com
+  - group: "admissionregistration.k8s.io/v1"
+    kind: "MutatingWebhookConfiguration"
+    # managedFieldsManagers:
+    # - vault-k8s
+    jsonPointers:
+    - /webhooks/clientConfig/caBundle    
     
   syncPolicy:
     automated:
@@ -77,3 +79,4 @@ spec:
       allowEmpty: false
     syncOptions:
     - CreateNamespace=true
+    - RespectIgnoreDifferences=true
