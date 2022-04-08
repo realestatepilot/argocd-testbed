@@ -66,10 +66,10 @@ spec:
   ignoreDifferences:
   - group: "admissionregistration.k8s.io/v1"
     kind: "MutatingWebhookConfiguration"
-    # managedFieldsManagers:
-    # - vault-k8s
-    jsonPointers:
-    - /webhooks/clientConfig/caBundle    
+    managedFieldsManagers:
+    - vault-k8s
+    # jsonPointers:
+    # - /webhooks/clientConfig/caBundle    
     
   syncPolicy:
     automated:
