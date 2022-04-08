@@ -80,7 +80,8 @@ server:
           project: default
           source:
             repoURL: https://github.com/realestatepilot/argocd-testbed.git
-            targetRevision: main
+            # TODO: change this to current development / release branch!
+            targetRevision: vault
             path: "argocd-apps/"
             directory:
               recurse: true

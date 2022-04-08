@@ -152,6 +152,10 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 
 # Changes
 
+## under development v0.3.0
+* use hashicorps vault for secrets encryption (transit secrets engine)
+* secure startup of argocd and vault via sops age / pgp
+
 ## v0.2.0
 * use ArgoCD v2.3.2
 * increment sops to v3.7.2
