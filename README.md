@@ -25,7 +25,46 @@ To access argocd and nginx via browser append
 `127.0.0.1 *.ubuntu.localhost`
 to your local hosts file.
 
-## Run argocd testbed
+
+## Run Argcd testbed - using existing minikube
+
+### Install Requirements
+
+generally needed:
+* [minikube](https://minikube.sigs.k8s.io/docs/start/)
+* kubectl
+* helm
+* gpg
+
+```
+mkdir -p $PWD/bin/
+cd $PWD/bin/
+wget https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.linux
+chmod +x sops-v3.7.2.linux
+mv sops-v3.7.2.linux sops
+
+wget https://github.com/FiloSottile/age/releases/download/v1.0.0/age-v1.0.0-linux-amd64.tar.gz
+tar xfvz age-v1.0.0-linux-amd64.tar.gz 
+mv age age_ 
+mv age_/age . 
+mv age_/age-keygen .
+rm -rf age_
+
+helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
+cd ..
+
+```
+### Run
+```
+minikube start --force --memory 4096 --cpus 2
+minikube addons enable ingress
+```
+
+Script `startup-argocd-local-k8s.sh` rolls out the ArgoCD Deployment and your secrets.
+Open ArgoCD GUI with your port forward.
+
+
+## Run argocd testbed - Docker In Docker
 
 * keep your disk usage level under ~80% or deployment will fail (kubernetes disk pressure)
 * startup takes about 5 min, downloading about 1GB
@@ -151,6 +190,11 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 ```
 
 # Changes
+
+## v0.3.0
+* refactor init-container to run on minikube
+* describe test setup without Docker in Docker
+
 
 ## v0.2.0
 * use ArgoCD v2.3.2

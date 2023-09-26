@@ -138,7 +138,7 @@ repoServer:
 
   initContainers:
     - name: download-tools
-      image: alpine:latest
+      image: debian:latest
       command: [sh, -ec]
       env:
         - name: HELM_SECRETS_VERSION
@@ -146,16 +146,19 @@ repoServer:
         - name: SOPS_VERSION
           value: "3.7.2"
         - name: KUBECTL_VERSION
-          value: "1.23.0"
+          value: "1.25.0"
       args:
-        - |
-          mkdir -p /custom-tools/helm-plugins
-          wget -qO- https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz | tar -C /custom-tools/helm-plugins -xzf-;
-
-          wget -qO /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
-          wget -qO /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-
-          chmod +x /custom-tools/*
-      volumeMounts:
-        - mountPath: /custom-tools
-          name: custom-tools
+        - | 
+          apt update; apt-get install -y curl
+          mkdir -p /custom-tools/helm-plugins 
+          echo "dl helm secrets  from https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz"
+          curl -OL https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz 
+          tar -C /custom-tools/helm-plugins -xzf helm-secrets.tar.gz 
+          echo "dl sops"
+          curl -L -o /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
+          curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+          chmod +x /custom-tools/* 
+          
+      # volumeMounts:
+      #   - mountPath: /custom-tools
+      #     name: custom-tools

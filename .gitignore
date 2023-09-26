@@ -1,3 +1,4 @@
 **.key.*
 helm-charts/nginx/Chart.lock
 **/charts
+bin/**
