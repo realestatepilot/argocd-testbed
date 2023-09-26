@@ -80,7 +80,7 @@ server:
           project: default
           source:
             repoURL: https://github.com/realestatepilot/argocd-testbed.git
-            targetRevision: main
+            targetRevision: argocd-2.8
             path: "argocd-apps/"
             directory:
               recurse: true
@@ -159,6 +159,6 @@ repoServer:
           curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
           chmod +x /custom-tools/* 
           
-      # volumeMounts:
-      #   - mountPath: /custom-tools
-      #     name: custom-tools
+      volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools

@@ -12,8 +12,8 @@ appVersion: 1.21.6
 
 dependencies: # A list of the chart requirements (optional)
   - name: nginx
-    version: "9.8.0"
-    repository: https://charts.bitnami.com/bitnami
+    version: "15.3.1"
+    repository: oci://registry-1.docker.io/bitnamicharts
     # condition: (optional) A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
     # tags: # (optional)
     #   - Tags can be used to group charts for enabling/disabling together
