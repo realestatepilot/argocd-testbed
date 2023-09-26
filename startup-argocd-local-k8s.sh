@@ -42,11 +42,14 @@ cat $PWD/secrets/*.key.age >> $PWD/.config/sops/age/keys.txt
 # install argocd
 # optionally deploy also secret file
 if [ -f "$PWD/argocd-bootstrap/secret-argocd-values.yaml" ]; then
-  helm secrets upgrade argocd -i -n argocd -f $PWD/argocd-bootstrap/secret-argocd-values.yaml -f $PWD/argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 4.2.2
+  helm secrets upgrade argocd -i -n argocd -f $PWD/argocd-bootstrap/secret-argocd-values.yaml -f $PWD/argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 5.46.7
   # SECRET_VALUE_FILE='-f /argocd-bootstrap/secret-argocd-values.yaml'
 else
-  helm secrets upgrade argocd -i -n argocd -f $PWD/argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 4.2.2
+  helm secrets upgrade argocd -i -n argocd -f $PWD/argocd-bootstrap/argocd-values.yaml argo/argo-cd --version 5.46.7
 fi
+
+# install vault secret
+kubectl apply -n argocd -f $PWD/secrets/vault-secret.yaml
 
 kubectl rollout status deployment.apps/argocd-repo-server -n argocd
 

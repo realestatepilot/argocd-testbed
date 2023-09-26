@@ -1,33 +1,12 @@
+crds:
+  install: false
+
+global:
+  revisionHistoryLimit: 1
 configs:
-    secret:
-        createSecret: true
-        argocdServerAdminPassword: $2a$10$rf1hVgJ2kOCvqPM8iNRyQeJ44Z148amqrYKwiNEcS0JR5FIppEswe
-        argocdServerAdminPasswordMtime: "2021-05-01T10:11:12Z"
+    cm:
+        exec.enabled: true
 
-server:
-    extraArgs:
-        - --insecure
-    ingress:
-        enabled: true
-        ingressClassName: nginx
-        # annotations:
-        #     kubernetes.io/tls-acme: "true"
-        hosts:
-            - argocd.ubuntu.localhost
-    rbacConfig:
-        policy.default: role:readonly
-        # verweist auf die default eingebaute admin-rolle
-        policy.csv: |
-            g, resp-kubernetes-admin, role:admin
-        #   # p, role:org-admin, applications, *, */*, allow
-
-    configEnabled: true
-    config:
-        helm.valuesFileSchemes: >-
-            secrets+gpg-import, secrets+gpg-import-kubernetes,
-            secrets+age-import, secrets+age-import-kubernetes,
-            secrets,
-            https    
         url: http://argocd.ubuntu.localhost:8080
         dex.config: |
             connectors:
@@ -72,26 +51,97 @@ server:
                     # Represents group name.
                     nameAttr: cn
 
-    additionalApplications:
-        - name: app-bootstrap
-          # namespace: istio-operator
-          #   additionalLabels: {}
-          #   additionalAnnotations: {}
-          project: default
-          source:
-            repoURL: https://github.com/realestatepilot/argocd-testbed.git
-            targetRevision: argocd-2.8
-            path: "argocd-apps/"
-            directory:
-              recurse: true
-          destination:
-            server: https://kubernetes.default.svc
-            namespace: nginx
-          syncPolicy:
-            automated:
-                prune: true
-                selfHeal: true
+    helm.valuesFileSchemes: >-
+        secrets+gpg-import, secrets+gpg-import-kubernetes,
+        secrets+age-import, secrets+age-import-kubernetes,
+        secrets,
+        https    
 
+
+    params:
+        server.insecure: true
+
+
+    secret:
+        createSecret: true
+        argocdServerAdminPassword: $2a$10$rf1hVgJ2kOCvqPM8iNRyQeJ44Z148amqrYKwiNEcS0JR5FIppEswe
+        argocdServerAdminPasswordMtime: "2021-05-01T10:11:12Z"
+
+server:
+    # extraArgs:
+    #     - --insecure
+    ingress:
+        enabled: true
+        ingressClassName: nginx
+        # annotations:
+        #     kubernetes.io/tls-acme: "true"
+        hosts:
+            - argocd.ubuntu.localhost
+
+    ## ? wohin?
+    # rbacConfig:
+    #     policy.default: role:readonly
+    #     # verweist auf die default eingebaute admin-rolle
+    #     policy.csv: |
+    #         g, resp-kubernetes-admin, role:admin
+    #     #   # p, role:org-admin, applications, *, */*, allow
+
+
+extraObjects:
+  - apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: app-bootstrap
+    spec:
+        name: app-bootstrap
+        # namespace: istio-operator
+        #   additionalLabels: {}
+        #   additionalAnnotations: {}
+        project: default
+        source:
+          repoURL: https://github.com/realestatepilot/argocd-testbed.git
+          targetRevision: argocd-2.8
+          path: "argocd-apps/"
+          directory:
+            recurse: true
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: nginx
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: argocd-vault
+    data:
+      vault.hcl: |
+        pid_file = "/tmp/vault.pid"
+
+        auto_auth {
+          method {
+            type = "approle"
+
+            config = {
+              role_id_file_path = "/etc/vault.d/roleid"
+              secret_id_file_path = "/etc/vault.d/secretid"
+              remove_secret_id_file_after_reading = false
+            }
+            min_backoff = "10s"
+            max_backoff = "5m"
+            exit_on_err =  false
+          }
+
+          sink {
+            type = "file"
+
+            config = {
+              path = "/vault-token/.vault_token"
+            }
+          }
+        }      
+      
 
 repoServer:
     # extraArgs:
@@ -115,6 +165,44 @@ repoServer:
       value: "false"
     - name: HELM_SECRETS_VALUES_ALLOW_PATH_TRAVERSAL
       value: "false"      
+  extraContainers: 
+    - name: vault-agent
+      command:
+        - "mount > /proc/1/fd/1 && vault agent -config /etc/vault/vault.hcl"
+      image: hashicorp/vault:1.14
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        capabilities:
+          add: ["IPC_LOCK"]
+      volumeMounts:
+        - name: argocd-vault
+          readOnly: true
+          mountPath: /etc/vault/
+        # - name: argocd-vault
+        #   mountPath: /etc/vault.d/vault.hcl
+        #   subPath: vault.hcl
+        - mountPath: /vault-token
+          name: vault-token
+        - name: appauth-role
+          readOnly: true
+          mountPath: /etc/vault.d/roleid
+          subPath: roleid
+        - name: appauth-secret
+          readOnly: true
+          mountPath: /etc/vault.d/secretid
+          subPath: secretid
+        # - mountPath: /home/argocd/cmp-server/plugins
+        #   name: plugins
+        # # Remove this volumeMount if you've chosen to bake the config file into the sidecar image.
+        # - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+        #   subPath: my-plugin.yaml
+        #   name: argocd-cmp-cm
+        # # Starting with v2.4, do NOT mount the same tmp volume as the repo-server container. The filesystem separation helps
+        # # mitigate path traversal attacks.
+        # - mountPath: /tmp
+        #   name: cmp-tmp
+
   volumes:
     - name: custom-tools
       emptyDir: {}
@@ -126,6 +214,29 @@ repoServer:
       secret:
         secretName: age-key
         # secretName: tenant1.key.age
+    - name: argocd-vault
+      configMap: 
+        name: argocd-vault
+        # items: 
+        #   - key: vault.hcl
+        #     path: vault.hcl
+    - name: vault-token
+      emptyDir: {}
+    - name: appauth-role
+      secret:
+        secretName: vault-approle-credentials
+        items:
+          - key: roleid
+            path: roleid
+        defaultMode: 420
+    - name: appauth-secret
+      secret:
+        secretName: vault-approle-credentials
+        items:
+          - key: secretid
+            path: secretid
+        defaultMode: 420      
+
   volumeMounts:
     - mountPath: /custom-tools
       name: custom-tools
@@ -135,30 +246,49 @@ repoServer:
     - name: age-secret
       mountPath: /tenant1.key.age
       subPath: tenant1.key.age
+    - name: vault-token
+      mountPath: /vault-token
 
-  initContainers:
-    - name: download-tools
-      image: debian:latest
-      command: [sh, -ec]
-      env:
-        - name: HELM_SECRETS_VERSION
-          value: "3.12.0"
-        - name: SOPS_VERSION
-          value: "3.7.2"
-        - name: KUBECTL_VERSION
-          value: "1.25.0"
-      args:
-        - | 
-          apt update; apt-get install -y curl
-          mkdir -p /custom-tools/helm-plugins 
-          echo "dl helm secrets  from https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz"
-          curl -OL https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz 
-          tar -C /custom-tools/helm-plugins -xzf helm-secrets.tar.gz 
-          echo "dl sops"
-          curl -L -o /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
-          curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-          chmod +x /custom-tools/* 
+  # #nur testweise
+  #   - name: argocd-vault
+  #     readOnly: true
+  #     mountPath: /etc/vault/
+  #   # - name: argocd-vault
+  #   #   mountPath: /etc/vault.d/vault.hcl
+  #   #   subPath: vault.hcl
+  #   - name: appauth-role
+  #     readOnly: true
+  #     mountPath: /etc/vault.d/roleid
+  #     subPath: roleid
+  #   - name: appauth-secret
+  #     readOnly: true
+  #     mountPath: /etc/vault.d/secretid
+  #     subPath: secretid
+
+
+  # initContainers:
+  #   - name: download-tools
+  #     image: debian:latest
+  #     command: [sh, -ec]
+  #     env:
+  #       - name: HELM_SECRETS_VERSION
+  #         value: "3.12.0"
+  #       - name: SOPS_VERSION
+  #         value: "3.7.2"
+  #       - name: KUBECTL_VERSION
+  #         value: "1.25.0"
+  #     args:
+  #       - | 
+  #         apt update; apt-get install -y curl
+  #         mkdir -p /custom-tools/helm-plugins 
+  #         echo "dl helm secrets  from https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz"
+  #         curl -OL https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz 
+  #         tar -C /custom-tools/helm-plugins -xzf helm-secrets.tar.gz 
+  #         echo "dl sops"
+  #         curl -L -o /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
+  #         curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+  #         chmod +x /custom-tools/* 
           
-      volumeMounts:
-        - mountPath: /custom-tools
-          name: custom-tools
+  #     volumeMounts:
+  #       - mountPath: /custom-tools
+  #         name: custom-tools

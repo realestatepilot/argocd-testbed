@@ -193,9 +193,24 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 # Changes
 
 ## v0.3.0
+
+Status:
+  * Vault Container startet nicht, mount findet vault.hcl nicht
+  * dann sollte in /vault-token mal ein token erscheinen
+  * config des secrets:// via Vault steht noch aus
+
+
 * refactor init-container to run on minikube
 * describe test setup without Docker in Docker
 
+Upgrade from 0.2.1
+* Upgrade CRD with `kubectl apply -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.8.4"`
+* CRD will managed outside helm, add argument to script
+
+
+## 0.2.1 
+* upgrade dependency ngin helm chart
+* fix init-container
 
 ## v0.2.0
 * use ArgoCD v2.3.2
