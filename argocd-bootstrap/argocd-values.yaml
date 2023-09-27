@@ -106,7 +106,7 @@ extraObjects:
             recurse: true
         destination:
           server: https://kubernetes.default.svc
-          namespace: nginx
+          namespace: default
         syncPolicy:
           automated:
             prune: true
