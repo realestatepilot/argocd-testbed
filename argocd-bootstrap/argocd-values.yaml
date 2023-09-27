@@ -5,53 +5,53 @@ global:
   revisionHistoryLimit: 1
 configs:
     cm:
-        exec.enabled: true
+      exec.enabled: true
 
-        url: http://argocd.ubuntu.localhost:8080
-        dex.config: |
-            connectors:
-              - type: ldap
-                id: ldap
-                name: LDAP
-                config:
-                  # beispiel für passwort-übergabe aus env-datei (ab dex 2.28)
-                  # dummy: {{ getenv "HOSTNAME" "http://127.0.0.1:5556/dex" }}
-                  # secrets defined in argocd-secrets
-                  host: $LDAP_HOST
-                  bindDN: $LDAP_BIND_DN
-                  bindPW: $LDAP_BIND_PW
-                  usernamePrompt: "Anmeldename"
-                  userSearch:
-                    baseDN: dc=evermind,dc=de
-                    # Optional filter to apply when searching the directory.
-                    filter: "(objectClass=person)"
-                    # username attribute used for comparing user entries. This will be translated
-                    # and combined with the other filter as "(<attr>=<username>)".
-                    username: uid
-                    # The following three fields are direct mappings of attributes on the user entry.
-                    # String representation of the user.
-                    idAttr: uidNumber
-                    # Required. Attribute to map to Email.
-                    emailAttr: mail
-                    # Maps to display name of users. No default value.
-                    nameAttr: displayName
-                  # Group search queries for groups given a user entry.
-                  groupSearch:
-                    # BaseDN to start the search from. It will translate to the query
-                    # "(&(objectClass=groupOfUniqueNames)(uniqueMember=<user uid>))".
-                    baseDN: ou=Gruppen,dc=evermind,dc=de
-                    # Optional filter to apply when searching the directory.
-                    # filter: "(objectClass=groupOfUniqueNames)"
-                    # Following list contains field pairs that are used to match a user to a group. It adds an additional
-                    # requirement to the filter that an attribute in the group must match the user's
-                    # attribute value.
-                    userMatchers:
-                    - userAttr: DN
-                      groupAttr: uniqueMember
-                    # Represents group name.
-                    nameAttr: cn
+      url: http://argocd.ubuntu.localhost:8080
+      dex.config: |
+        connectors:
+          - type: ldap
+            id: ldap
+            name: LDAP
+            config:
+              # beispiel für passwort-übergabe aus env-datei (ab dex 2.28)
+              # dummy: {{ getenv "HOSTNAME" "http://127.0.0.1:5556/dex" }}
+              # secrets defined in argocd-secrets
+              host: $LDAP_HOST
+              bindDN: $LDAP_BIND_DN
+              bindPW: $LDAP_BIND_PW
+              usernamePrompt: "Anmeldename"
+              userSearch:
+                baseDN: dc=evermind,dc=de
+                # Optional filter to apply when searching the directory.
+                filter: "(objectClass=person)"
+                # username attribute used for comparing user entries. This will be translated
+                # and combined with the other filter as "(<attr>=<username>)".
+                username: uid
+                # The following three fields are direct mappings of attributes on the user entry.
+                # String representation of the user.
+                idAttr: uidNumber
+                # Required. Attribute to map to Email.
+                emailAttr: mail
+                # Maps to display name of users. No default value.
+                nameAttr: displayName
+              # Group search queries for groups given a user entry.
+              groupSearch:
+                # BaseDN to start the search from. It will translate to the query
+                # "(&(objectClass=groupOfUniqueNames)(uniqueMember=<user uid>))".
+                baseDN: ou=Gruppen,dc=evermind,dc=de
+                # Optional filter to apply when searching the directory.
+                # filter: "(objectClass=groupOfUniqueNames)"
+                # Following list contains field pairs that are used to match a user to a group. It adds an additional
+                # requirement to the filter that an attribute in the group must match the user's
+                # attribute value.
+                userMatchers:
+                - userAttr: DN
+                  groupAttr: uniqueMember
+                # Represents group name.
+                nameAttr: cn
 
-    helm.valuesFileSchemes: >-
+      helm.valuesFileSchemes: >-
         secrets+gpg-import, secrets+gpg-import-kubernetes,
         secrets+age-import, secrets+age-import-kubernetes,
         secrets,
@@ -59,13 +59,13 @@ configs:
 
 
     params:
-        server.insecure: true
+      server.insecure: true
 
 
     secret:
-        createSecret: true
-        argocdServerAdminPassword: $2a$10$rf1hVgJ2kOCvqPM8iNRyQeJ44Z148amqrYKwiNEcS0JR5FIppEswe
-        argocdServerAdminPasswordMtime: "2021-05-01T10:11:12Z"
+      createSecret: true
+      argocdServerAdminPassword: $2a$10$rf1hVgJ2kOCvqPM8iNRyQeJ44Z148amqrYKwiNEcS0JR5FIppEswe
+      argocdServerAdminPasswordMtime: "2021-05-01T10:11:12Z"
 
 server:
     # extraArgs:
@@ -116,7 +116,7 @@ extraObjects:
     metadata:
       name: argocd-vault
     data:
-      vault.hcl: |
+      vault.hcl: |-
         pid_file = "/tmp/vault.pid"
 
         auto_auth {
@@ -167,23 +167,22 @@ repoServer:
       value: "false"      
   extraContainers: 
     - name: vault-agent
-      command:
-        - "mount > /proc/1/fd/1 && vault agent -config /etc/vault/vault.hcl"
+      command: ["/bin/sh", "-ec", "vault agent -config=/vault-config/vault.hcl"]
       image: hashicorp/vault:1.14
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
+        runAsUser: 999
         capabilities:
           add: ["IPC_LOCK"]
+      env:
+        - name: VAULT_ADDR
+          value: https://vault.wolke8.it
       volumeMounts:
         - name: argocd-vault
           readOnly: true
-          mountPath: /etc/vault/
-        # - name: argocd-vault
-        #   mountPath: /etc/vault.d/vault.hcl
-        #   subPath: vault.hcl
-        - mountPath: /vault-token
-          name: vault-token
+          mountPath: /vault-config/
+        - name: vault-token
+          mountPath: /vault-token
         - name: appauth-role
           readOnly: true
           mountPath: /etc/vault.d/roleid
@@ -217,9 +216,7 @@ repoServer:
     - name: argocd-vault
       configMap: 
         name: argocd-vault
-        # items: 
-        #   - key: vault.hcl
-        #     path: vault.hcl
+        defaultMode: 420
     - name: vault-token
       emptyDir: {}
     - name: appauth-role
@@ -240,6 +237,9 @@ repoServer:
   volumeMounts:
     - mountPath: /custom-tools
       name: custom-tools
+    - mountPath: /usr/local/sbin/helm
+      subPath: helm
+      name: custom-tools      
     - name: gpg-secret
       mountPath: /tenant1.key.gpg
       subPath: tenant1.key.gpg
@@ -249,46 +249,57 @@ repoServer:
     - name: vault-token
       mountPath: /vault-token
 
-  # #nur testweise
-  #   - name: argocd-vault
-  #     readOnly: true
-  #     mountPath: /etc/vault/
-  #   # - name: argocd-vault
-  #   #   mountPath: /etc/vault.d/vault.hcl
-  #   #   subPath: vault.hcl
-  #   - name: appauth-role
-  #     readOnly: true
-  #     mountPath: /etc/vault.d/roleid
-  #     subPath: roleid
-  #   - name: appauth-secret
-  #     readOnly: true
-  #     mountPath: /etc/vault.d/secretid
-  #     subPath: secretid
 
-
-  # initContainers:
-  #   - name: download-tools
-  #     image: debian:latest
-  #     command: [sh, -ec]
-  #     env:
-  #       - name: HELM_SECRETS_VERSION
-  #         value: "3.12.0"
-  #       - name: SOPS_VERSION
-  #         value: "3.7.2"
-  #       - name: KUBECTL_VERSION
-  #         value: "1.25.0"
-  #     args:
-  #       - | 
-  #         apt update; apt-get install -y curl
-  #         mkdir -p /custom-tools/helm-plugins 
-  #         echo "dl helm secrets  from https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz"
-  #         curl -OL https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz 
-  #         tar -C /custom-tools/helm-plugins -xzf helm-secrets.tar.gz 
-  #         echo "dl sops"
-  #         curl -L -o /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
-  #         curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-  #         chmod +x /custom-tools/* 
+  initContainers:
+    - name: download-tools
+      image: alpine:latest
+      imagePullPolicy: IfNotPresent
+      command: [sh, -ec]
+      env:
+        - name: HELM_SECRETS_VERSION
+          value: "4.5.1"
+        - name: KUBECTL_VERSION
+          value: "1.26.1"
+        - name: VALS_VERSION
+          value: "0.24.0"
+        - name: SOPS_VERSION
+          value: "3.7.3"
+      args:
+        - |
+          mkdir -p /custom-tools/helm-plugins
+          wget -qO- https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz | tar -C /custom-tools/helm-plugins -xzf-;
           
-  #     volumeMounts:
-  #       - mountPath: /custom-tools
-  #         name: custom-tools
+          wget -qO /custom-tools/curl https://github.com/moparisthebest/static-curl/releases/latest/download/curl-amd64
+          wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
+          wget -qO /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+
+          wget -qO- https://github.com/helmfile/vals/releases/download/v${VALS_VERSION}/vals_${VALS_VERSION}_linux_amd64.tar.gz | tar -xzf- -C /custom-tools/ vals;
+
+          cp /custom-tools/helm-plugins/helm-secrets/scripts/wrapper/helm.sh /custom-tools/helm
+          
+          chmod +x /custom-tools/*
+    # - name: download-tools
+    #   image: debian:latest
+    #   command: [sh, -ec]
+    #   env:
+    #     - name: HELM_SECRETS_VERSION
+    #       value: "3.12.0"
+    #     - name: SOPS_VERSION
+    #       value: "3.7.2"
+    #     - name: KUBECTL_VERSION
+    #       value: "1.25.0"
+    #   args:
+    #     - | 
+    #       apt update; apt-get install -y curl
+    #       mkdir -p /custom-tools/helm-plugins 
+    #       echo "dl helm secrets  from https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz"
+    #       curl -OL https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz 
+    #       tar -C /custom-tools/helm-plugins -xzf helm-secrets.tar.gz 
+    #       echo "dl sops"
+    #       curl -L -o /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
+    #       curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+    #       chmod +x /custom-tools/* 
+          
+      volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools
