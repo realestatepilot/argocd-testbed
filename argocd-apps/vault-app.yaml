@@ -53,7 +53,8 @@ spec:
         ui:
           enabled: true
     repoURL: https://helm.releases.hashicorp.com
-    targetRevision: 0.19.0
+    
+    targetRevision: 0.25.0
     chart: vault
     
   destination:
@@ -65,10 +66,10 @@ spec:
   
   ignoreDifferences:
   - group: "*"
-    kind: "*"
+    kind: "*"    
     managedFieldsManagers:
-    - vault.hashicorp.com
-    
+    - vault-k8s
+
   syncPolicy:
     automated:
       prune: false
