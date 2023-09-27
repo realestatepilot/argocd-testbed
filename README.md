@@ -129,6 +129,30 @@ creation_rules:
 `helm secrets enc file.yaml` encrypts file with age
 `helm secrets edit file.yaml` open default editor to edit encrypted file
 
+### Transit Encyption via Hashicorp Vault
+
+Problem: 
+* Encryted data need always the same key to decrypt
+* key is saved inside vault
+* Vault devmode don allow persisence but 
+* devmode keeps testbed simple
+
+Solution:
+* author has exported key used for encrypt demo data
+* setup container does
+  * enable vault transit encryption (vault container)
+  * restore prepared key into vault (secondary container with curl)
+  
+
+
+Setup for testbed:
+* Argocd Application for Vault
+  * devMode
+  * no persistence
+* setup-Container to Configure transit Encryption
+  1. vault container 
+
+####
 
 ### GPG for leagcy files
 
@@ -195,9 +219,9 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 ## v0.3.0
 
 Status:
-  * Vault Container startet nicht, mount findet vault.hcl nicht
-  * dann sollte in /vault-token mal ein token erscheinen
-  * config des secrets:// via Vault steht noch aus
+* transit engine ist zu konfigurieren
+* extra container für startup gebaut
+* unklar, wie mit wechselnden keys umgegangen wird oder ein backup / restore für transit keys möglicgh ist
 
 
 * refactor init-container to run on minikube

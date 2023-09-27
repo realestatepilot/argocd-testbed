@@ -1,5 +1,17 @@
 # legt den Transit-Vault nach dem starten an
 
+# echo starting;
+# apk update; apk add curl;
+# until $(curl --output /dev/null --silent --head --fail ${VAULT_ADDR}); do
+#     printf '.'
+#     sleep 5
+# done;
+# echo done;
+
+# vault secrets enable transit;
+# vault write -f transit/keys/argocd;
+
+
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -8,33 +20,40 @@ metadata:
 spec:
   project: default
   source:
+
     helm:
-      values: |
-        image:
-          repository: debian
-          pullPolicy: IfNotPresent
-          # Overrides the image tag whose default is the chart appVersion.
-          tag: "12"      
+      valueFiles:
+        - values.yaml
+    repoURL: https://github.com/realestatepilot/argocd-testbed.git
+    targetRevision: argocd-2.8
+    path: "helm-charts/vault-transit-setup"
 
-        command: ["/bin/sh", "-c"]
-        args:
-          - sleep infinity;
-            echo starting;
-            until $(curl --output /dev/null --silent --head --fail ${VAULT_ADDR}); do
-                printf '.'
-                sleep 5
-            done;
-            echo done;
-        env:
-          - name: VAULT_ADDR
-            value: http://in-cluster-vault:8200
-          - name: VAULT_TOKEN
-            value: mySecret
+    # helm:
+    #   values: |
+    #     image:
+    #       repository: hashicorp/vault
+    #       pullPolicy: IfNotPresent
+    #       # Overrides the image tag whose default is the chart appVersion.
+    #       tag: "1.14"      
+    #     securityContext:
+    #       runAsNonRoot: true
+    #       runAsUser: 999
+    #       capabilities:
+    #         add: ["IPC_LOCK"]
 
-    repoURL: https://realestatepilot.github.io/helm-charts
+    #     command: ["/bin/sh", "-c"]
+    #     args:
+    #       - sleep infinity;
+    #     env:
+    #       - name: VAULT_ADDR
+    #         value: http://in-cluster-vault:8200
+    #       - name: VAULT_TOKEN
+    #         value: mySecret
+
+    # repoURL: https://realestatepilot.github.io/helm-charts
     
-    targetRevision: 0.1.8
-    chart: generic
+    # targetRevision: 0.1.9
+    # chart: generic
     
   destination:
     name: in-cluster
