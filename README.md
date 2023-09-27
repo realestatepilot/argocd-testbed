@@ -32,6 +32,7 @@ to your local hosts file.
 
 generally needed:
 * [minikube](https://minikube.sigs.k8s.io/docs/start/)
+  * start with ex: `minikube start --apiserver-ips=65.109.15.200 --force --listen-address=0.0.0.0 --cpus=4 --memory=14g`
 * kubectl
 * helm
 * gpg
