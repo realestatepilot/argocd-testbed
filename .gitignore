@@ -3,3 +3,4 @@ helm-charts/nginx/Chart.lock
 **/charts
 bin/**
 secrets/vault-secret.yaml
+.config/sops/age/keys.txt

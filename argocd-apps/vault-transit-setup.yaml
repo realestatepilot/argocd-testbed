@@ -1,0 +1,49 @@
+# legt den Transit-Vault nach dem starten an
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: in-cluster-vault-transit-setup
+  namespace: argocd
+spec:
+  project: default
+  source:
+    helm:
+      values: |
+        image:
+          repository: debian
+          pullPolicy: IfNotPresent
+          # Overrides the image tag whose default is the chart appVersion.
+          tag: "12"      
+
+        command: ["/bin/sh", "-c"]
+        args:
+          - sleep infinity;
+            echo starting;
+            until $(curl --output /dev/null --silent --head --fail ${VAULT_ADDR}); do
+                printf '.'
+                sleep 5
+            done;
+            echo done;
+        env:
+          - name: VAULT_ADDR
+            value: http://in-cluster-vault:8200
+          - name: VAULT_TOKEN
+            value: mySecret
+
+    repoURL: https://realestatepilot.github.io/helm-charts
+    
+    targetRevision: 0.1.8
+    chart: generic
+    
+  destination:
+    name: in-cluster
+    namespace: vault
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: true
+    syncOptions:
+    - CreateNamespace=true
