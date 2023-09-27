@@ -18,6 +18,26 @@ spec:
           dev:
             enabled: true
             devRootToken: mySecret
+
+          extraContainers:
+          - name: vault-transit-setup
+            command: ["/bin/sh", "-ec", "vault agent -config=/vault-config/vault.hcl"]
+            image: debian:12
+            command: ["/bin/sh", "-c"]
+            args:
+              - echo starting;
+                echo done;
+            
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 999
+            env:
+              - name: VAULT_ADDR
+                value: http://in-cluster-vault:8200
+              - name: VAULT_TOKEN
+                value: mySecret
+
+
           # standalone:
           #   config: |
           #     ui = true
