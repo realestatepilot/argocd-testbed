@@ -20,7 +20,7 @@ spec:
     namespace: nginx
   info:
     - name: url
-      value: http://nginx.ubuntu.localhost:8080
+      value: http://localhost:80
 
   syncPolicy:
     automated:
