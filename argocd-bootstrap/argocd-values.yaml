@@ -75,7 +75,7 @@ extraObjects:
         project: default
         source:
           repoURL: https://github.com/realestatepilot/argocd-testbed.git
-          targetRevision: argocd-2.8
+          targetRevision: main
           path: "argocd-apps/"
           directory:
             recurse: true

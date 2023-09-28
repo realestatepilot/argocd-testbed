@@ -25,7 +25,7 @@
 #       valueFiles:
 #         - values.yaml
 #     repoURL: https://github.com/realestatepilot/argocd-testbed.git
-#     targetRevision: argocd-2.8
+#     targetRevision: main
 #     path: "helm-charts/vault-transit-setup"
 
 #     # helm:
