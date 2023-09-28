@@ -3,5 +3,5 @@ nginx:
   service:
     type: ClusterIP
   ingress:
-    enabled: true
+    enabled: false
     hostname: localhost
