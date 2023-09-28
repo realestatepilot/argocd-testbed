@@ -11,6 +11,7 @@ spec:
         - values.yaml
         - secrets+gpg-import:///tenant1.key.gpg?secret-values-gpg.yaml
         - secrets+age-import:///tenant1.key.age?secret-values-age.yaml
+        - secrets://secret-values-vault-transit.yaml
     repoURL: https://github.com/realestatepilot/argocd-testbed.git
     targetRevision: argocd-2.8
     path: "helm-charts/nginx"
