@@ -219,11 +219,17 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 ## v0.3.0
 
 Status:
+* eingebetteter Vault wird zu kompliziert, benutze vorhandenen Vault 
+* AppRole Credential in secrets/vault-secret.yaml
+  * muss manuell eingespielt werden bzw. wird mittel startup-script automatisiert
+---
 * transit engine ist zu konfigurieren
 * extra container für startup gebaut
 * unklar, wie mit wechselnden keys umgegangen wird oder ein backup / restore für transit keys möglicgh ist
-
-
+  * backup erlauben siehe deployment im helmchart
+  * unverschlüsselt exportieren erlauben hat nicht funktioniert, so dass 
+  * backup noch nicht möglich war.
+---
 * refactor init-container to run on minikube
 * describe test setup without Docker in Docker
 

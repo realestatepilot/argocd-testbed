@@ -38,6 +38,12 @@ spec:
               apt-get update; apt-get install -y curl
               sleep 20
               echo "restore transit keys"
+              
+              # backup
+              curl --header "X-Vault-Token: mySecret" --request POST --data '{ "exportable": true, "allow_plaintext_backup": true }' http://in-cluster-vault:8200/v1/transit/keys/argocd
+              curl --header "X-Vault-Token: mySecret" --request POST --data '{ "allow_plaintext_backup": true }' http://in-cluster-vault:8200/v1/transit/keys/argocd
+              
+              # curl --header "X-Vault-Token: mySecret"  http://in-cluster-vault:8200/v1/transit/backup/argocd
               sleep infinity
           env:
             {{- toYaml .Values.env | nindent 12 }}
@@ -49,7 +55,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args: 
-            - sleep infinity;
+            - |
+              vault secrets enable transit
+              sleep infinity
           env:
             {{- toYaml .Values.env | nindent 12 }}
           ports:
