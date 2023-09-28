@@ -1,79 +1,83 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: in-cluster-vault
-  namespace: argocd
-spec:
-  project: default
-  source:
-    helm:
-      values: |
-        server:
-          ingress:
-            enabled: true
-            ingressClassName: nginx
-            hosts: 
-              - host: vault.ubuntu.localhost
-                paths: []
-          dev:
-            enabled: true
-            devRootToken: mySecret
-          # standalone:
-          #   config: |
-          #     ui = true
-          #     listener "tcp" {
-          #       tls_disable = 1
-          #       address = "[::]:8200"
-          #       cluster_address = "[::]:8201"
-          #     }
-          #     seal "transit" {
-          #       address            = "https://vault:8200"
-          #       # should be set via ENV 'VAULT_TOKEN'
-          #       # token              = "keb3pim6VtoS0eqyPNYJYoKrpKyRoX"
-          #       disable_renewal    = "false"
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: in-cluster-vault
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     helm:
+#       values: |
+#         server:
+#           ingress:
+#             enabled: true
+#             ingressClassName: nginx
+#             hosts: 
+#               - host: vault.ubuntu.localhost
+#                 paths: []
+#           dev:
+#             enabled: true
+#             devRootToken: mySecret
 
-          #       // Key configuration
-          #       key_name           = "resp"
-          #       mount_path         = "transit/"
-          #       namespace          = ""
-          #     }              
-          #     storage "file" {
-          #       path = "/vault/data"
-          #     }
-          #     # Example configuration for using auto-unseal, using Google Cloud KMS. The
-          #     # GKMS keys must already exist, and the cluster must have a service account
-          #     # that is authorized to access GCP KMS.
-          #     #seal "gcpckms" {
-          #     #   project     = "vault-helm-dev"
-          #     #   region      = "global"
-          #     #   key_ring    = "vault-helm-unseal-kr"
-          #     #   crypto_key  = "vault-helm-unseal-key"
-          #     #}        
+#           # standalone:
+#           #   enabled: true
 
-        ui:
-          enabled: true
-    repoURL: https://helm.releases.hashicorp.com
-    targetRevision: 0.19.0
-    chart: vault
+#           #   config: |
+#           #     ui = true
+#           #     listener "tcp" {
+#           #       tls_disable = 1
+#           #       address = "[::]:8200"
+#           #       cluster_address = "[::]:8201"
+#           #     }
+#           #     # seal "transit" {
+#           #     #   address            = "https://vault:8200"
+#           #     #   # should be set via ENV 'VAULT_TOKEN'
+#           #     #   # token              = "keb3pim6VtoS0eqyPNYJYoKrpKyRoX"
+#           #     #   disable_renewal    = "false"
+
+#           #     #   // Key configuration
+#           #     #   key_name           = "argocd"
+#           #     #   mount_path         = "transit/"
+#           #     #   namespace          = ""
+#           #     # }              
+#           #     storage "file" {
+#           #       path = "/vault/data"
+#           #     }
+#           #     # Example configuration for using auto-unseal, using Google Cloud KMS. The
+#           #     # GKMS keys must already exist, and the cluster must have a service account
+#           #     # that is authorized to access GCP KMS.
+#           #     #seal "gcpckms" {
+#           #     #   project     = "vault-helm-dev"
+#           #     #   region      = "global"
+#           #     #   key_ring    = "vault-helm-unseal-kr"
+#           #     #   crypto_key  = "vault-helm-unseal-key"
+#           #     #}        
+
+#         ui:
+#           enabled: true
+#     repoURL: https://helm.releases.hashicorp.com
     
-  destination:
-    name: in-cluster
-    namespace: vault
-  info:
-    - name: url
-      value: http://vault.ubuntu.localhost:8080
+#     targetRevision: 0.25.0
+#     chart: vault
+    
+#   destination:
+#     name: in-cluster
+#     namespace: vault
+#   info:
+#     - name: url
+#       value: http://vault.ubuntu.localhost:8080
   
-  ignoreDifferences:
-  - group: "*"
-    kind: "*"
-    managedFieldsManagers:
-    - vault.hashicorp.com
-    
-  syncPolicy:
-    automated:
-      prune: false
-      # statt auto-update hier lieber manuell auf seine neue Version aufmerksam gemacht werden
-      # selfHeal: true
-      allowEmpty: false
-    syncOptions:
-    - CreateNamespace=true
+#   ignoreDifferences:
+#   - group: "*"
+#     kind: "*"    
+#     managedFieldsManagers:
+#     - vault-k8s
+
+#   syncPolicy:
+#     automated:
+#       prune: false
+#       # statt auto-update hier lieber manuell auf seine neue Version aufmerksam gemacht werden
+#       # selfHeal: true
+#       allowEmpty: false
+#     syncOptions:
+#     - CreateNamespace=true

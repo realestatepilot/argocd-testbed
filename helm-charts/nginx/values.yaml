@@ -4,4 +4,4 @@ nginx:
     type: ClusterIP
   ingress:
     enabled: true
-    hostname: nginx.ubuntu.localhost
+    hostname: localhost
