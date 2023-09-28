@@ -2,3 +2,5 @@
 helm-charts/nginx/Chart.lock
 **/charts
 bin/**
+.config/
+secrets/vault-secret.yaml
