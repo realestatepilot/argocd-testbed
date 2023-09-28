@@ -32,10 +32,10 @@ to your local hosts file.
 
 generally needed:
 * [minikube](https://minikube.sigs.k8s.io/docs/start/)
-  * start with ex: `minikube start --apiserver-ips=65.109.15.200 --force --listen-address=0.0.0.0 --cpus=4 --memory=14g`
 * kubectl
-* helm
+* helm with secrets plugin
 * gpg
+
 
 ```
 mkdir -p $PWD/bin/
@@ -55,17 +55,28 @@ helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
 cd ..
 
 ```
+
+* a Hashicorp Vault with transit engine and an [approle access](https://developer.hashicorp.com/vault/docs/auth/approle)
+  * put role_id an secret_id into `secrets/vault-secret.yaml' (see template `secrets/vault-secret.yaml.template')
+
+For vault transit secrets you should be able to encrypt content locally via your vault. Place `.sops` file at approbpriate location.
+
+
 ### Run
 ```
 minikube start --force --memory 4096 --cpus 2
-minikube addons enable ingress
 ```
+
+First time start:
+* install CRDs `kubectl apply -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.8.4"`
+* install vault approle secrets `kubectl create ns argocd; kubectl apply -f secrets/vault-secret.yaml`
+* encrypt secret-values-vault-transit.yaml.cleartext via vault transit `helm secrets encrypt secret-values-vault-transit.yaml.cleartext > secret-values-vault-transit.yaml`
 
 Script `startup-argocd-local-k8s.sh` rolls out the ArgoCD Deployment and your secrets.
 Open ArgoCD GUI with your port forward.
 
 
-## Run argocd testbed - Docker In Docker
+## Run argocd testbed - Docker In Docker (unsupported and maybe broken)
 
 * keep your disk usage level under ~80% or deployment will fail (kubernetes disk pressure)
 * startup takes about 5 min, downloading about 1GB
@@ -143,8 +154,6 @@ Solution:
   * enable vault transit encryption (vault container)
   * restore prepared key into vault (secondary container with curl)
   
-
-
 Setup for testbed:
 * Argocd Application for Vault
   * devMode
@@ -219,19 +228,15 @@ curl -H "Host: nginx.localhost.ubuntu" http://localhost:8080
 ## v0.3.0
 
 Status:
-* eingebetteter Vault wird zu kompliziert, benutze vorhandenen Vault 
-* AppRole Credential in secrets/vault-secret.yaml
-  * muss manuell eingespielt werden bzw. wird mittel startup-script automatisiert
----
-* transit engine ist zu konfigurieren
-* extra container für startup gebaut
-* unklar, wie mit wechselnden keys umgegangen wird oder ein backup / restore für transit keys möglicgh ist
-  * backup erlauben siehe deployment im helmchart
-  * unverschlüsselt exportieren erlauben hat nicht funktioniert, so dass 
-  * backup noch nicht möglich war.
----
+* argocd-testbed no longer depands on individual repo server image
 * refactor init-container to run on minikube
-* describe test setup without Docker in Docker
+* describe test setup with local minikube
+* support Hashicorb Vault Transit Encryption
+  * introduce vault agent sidecar for refreshing token
+  * patch helm wrapper to inject currently valid token into helm templating process
+  * uses AppRole Authentication
+  * only supported in local minikube environment
+* ingresses dont used any longer - use port forward
 
 Upgrade from 0.2.1
 * Upgrade CRD with `kubectl apply -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.8.4"`

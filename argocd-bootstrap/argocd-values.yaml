@@ -57,35 +57,13 @@ configs:
         secrets,
         https    
 
-
     params:
       server.insecure: true
-
 
     secret:
       createSecret: true
       argocdServerAdminPassword: $2a$10$rf1hVgJ2kOCvqPM8iNRyQeJ44Z148amqrYKwiNEcS0JR5FIppEswe
       argocdServerAdminPasswordMtime: "2021-05-01T10:11:12Z"
-
-server:
-    # extraArgs:
-    #     - --insecure
-    ingress:
-        enabled: true
-        ingressClassName: nginx
-        # annotations:
-        #     kubernetes.io/tls-acme: "true"
-        hosts:
-            - argocd.ubuntu.localhost
-
-    ## ? wohin?
-    # rbacConfig:
-    #     policy.default: role:readonly
-    #     # verweist auf die default eingebaute admin-rolle
-    #     policy.csv: |
-    #         g, resp-kubernetes-admin, role:admin
-    #     #   # p, role:org-admin, applications, *, */*, allow
-
 
 extraObjects:
   - apiVersion: argoproj.io/v1alpha1
@@ -94,9 +72,6 @@ extraObjects:
       name: app-bootstrap
     spec:
         name: app-bootstrap
-        # namespace: istio-operator
-        #   additionalLabels: {}
-        #   additionalAnnotations: {}
         project: default
         source:
           repoURL: https://github.com/realestatepilot/argocd-testbed.git
@@ -144,27 +119,32 @@ extraObjects:
       
 
 repoServer:
-    # extraArgs:
-    #     - --repo-cache-expiration
-    #     - 10m
-    ## Additional volumeMounts for gpg key import
-
   env:
     - name: HELM_PLUGINS
       value: /custom-tools/helm-plugins/
-    - name: HELM_SECRETS_HELM_PATH
-      value: /usr/local/bin/helm
+    - name: HELM_SECRETS_CURL_PATH
+      value: /custom-tools/curl
     - name: HELM_SECRETS_SOPS_PATH
       value: /custom-tools/sops
+    - name: HELM_SECRETS_VALS_PATH
+      value: /custom-tools/vals
     - name: HELM_SECRETS_KUBECTL_PATH
       value: /custom-tools/kubectl
-    # https://github.com/jkroepke/helm-secrets/wiki/Security-in-shared-environments
+    - name: HELM_SECRETS_BACKEND
+      value: sops
+      # https://github.com/jkroepke/helm-secrets/wiki/Security-in-shared-environments
     - name: HELM_SECRETS_VALUES_ALLOW_SYMLINKS
       value: "false"
     - name: HELM_SECRETS_VALUES_ALLOW_ABSOLUTE_PATH
-      value: "false"
+      value: "true" 
     - name: HELM_SECRETS_VALUES_ALLOW_PATH_TRAVERSAL
       value: "false"      
+    - name: HELM_SECRETS_WRAPPER_ENABLED
+      value: "true"
+    - name: HELM_SECRETS_DECRYPT_SECRETS_IN_TMP_DIR
+      value: "true"
+    - name: HELM_SECRETS_HELM_PATH
+      value: /usr/local/bin/helm
   extraContainers: 
     - name: vault-agent
       command: ["/bin/sh", "-ec", "vault agent -config=/vault-config/vault.hcl"]
@@ -208,11 +188,9 @@ repoServer:
     - name: gpg-secret
       secret:
         secretName: gpg-key
-        # secretName: tenant1.key.gpg
     - name: age-secret
       secret:
         secretName: age-key
-        # secretName: tenant1.key.age
     - name: argocd-vault
       configMap: 
         name: argocd-vault
@@ -252,7 +230,7 @@ repoServer:
 
   initContainers:
     - name: download-tools
-      image: alpine:latest
+      image: debian:12
       imagePullPolicy: IfNotPresent
       command: [sh, -ec]
       env:
@@ -266,6 +244,7 @@ repoServer:
           value: "3.7.3"
       args:
         - |
+          apt-get update; apt-get install -y wget
           mkdir -p /custom-tools/helm-plugins
           wget -qO- https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz | tar -C /custom-tools/helm-plugins -xzf-;
           
@@ -275,30 +254,12 @@ repoServer:
 
           wget -qO- https://github.com/helmfile/vals/releases/download/v${VALS_VERSION}/vals_${VALS_VERSION}_linux_amd64.tar.gz | tar -xzf- -C /custom-tools/ vals;
 
-          cp /custom-tools/helm-plugins/helm-secrets/scripts/wrapper/helm.sh /custom-tools/helm
+          #patch wrapper to get current VAULT_TOKEN routine to env
+          cat /custom-tools/helm-plugins/helm-secrets/scripts/wrapper/helm.sh | awk 'NR==1 {print; print "export VAULT_TOKEN=$(cat /vault-token/.vault_token)"} NR!=1' > /custom-tools/helm-plugins/helm-secrets/scripts/wrapper/helm-patched.sh
+          
+          cp /custom-tools/helm-plugins/helm-secrets/scripts/wrapper/helm-patched.sh /custom-tools/helm
           
           chmod +x /custom-tools/*
-    # - name: download-tools
-    #   image: debian:latest
-    #   command: [sh, -ec]
-    #   env:
-    #     - name: HELM_SECRETS_VERSION
-    #       value: "3.12.0"
-    #     - name: SOPS_VERSION
-    #       value: "3.7.2"
-    #     - name: KUBECTL_VERSION
-    #       value: "1.25.0"
-    #   args:
-    #     - | 
-    #       apt update; apt-get install -y curl
-    #       mkdir -p /custom-tools/helm-plugins 
-    #       echo "dl helm secrets  from https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz"
-    #       curl -OL https://github.com/jkroepke/helm-secrets/releases/download/v${HELM_SECRETS_VERSION}/helm-secrets.tar.gz 
-    #       tar -C /custom-tools/helm-plugins -xzf helm-secrets.tar.gz 
-    #       echo "dl sops"
-    #       curl -L -o /custom-tools/sops https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux
-    #       curl -L -o /custom-tools/kubectl https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-    #       chmod +x /custom-tools/* 
           
       volumeMounts:
         - mountPath: /custom-tools
