@@ -13,6 +13,9 @@ data:
     <p>
     via AGE: {{.Values.age.content}}
     </p>
+    <p>
+    via Hashicorp Vault Transit: {{.Values.hc_vault.transit.content}}
+    </p>
     </body
     </html>
 

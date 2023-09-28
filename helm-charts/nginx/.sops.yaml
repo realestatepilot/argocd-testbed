@@ -3,3 +3,5 @@ creation_rules:
     path_regex: -gpg\.
   - age: 'age1s3rr0xyt337vcfdhgsqhcd587vrlwzzgvtl2v6kya3ex5m0vg9wqz3l9ld'
     path_regex: -age\.
+  - hc_vault_transit_uri: "https://vault.wolke8.it/v1/transit/keys/argocd"
+    # encrypted_regex: '^(user.*|pass.*|.*[Bb]earer.*|salt|sentry.*|.*[Tt]oken|roleid|secretid)$'
