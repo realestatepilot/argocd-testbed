@@ -2,7 +2,7 @@
 
 Argocd acts as the heart of gitops driven deployments. Upgrading this can be challenging. You better test your setup before. This testbed can be used in situations where:
 * ArgoCD is used as gitops state machine
-* Secrets are handled by sops (pgp / age)
+* Secrets are handled by sops (pgp / age / Hashicorp Vault)
 * deployments use helm-charts if secrets are needed
 
 NEVER use this in production or test production systems!
@@ -92,14 +92,24 @@ All keys and deployments  are read to run without any modification just to have 
 
 ## Features 
 
-* ArgoCD v2.3.2
-* helm-secrets plugin
+* ArgoCD 2.8.4
+* helm secrets 4.5.1
+* sops 3.7.2
 * encryption via sops / gpg (2.2)
 * encryption via sops / age 
+* encryption via Vault transit Engine
 * LDAP Authentification
 * deploy some apps at local cluster
 
 ## Detailed technics
+
+## Integration Vault in ArgoCD
+* Init-Container defined in `argocd-bootstrap/argocd-values.yaml`
+  * used with helm install on startup script
+  * download tools needed to enhance argocd-reposerver
+  * patch helm secrets hook ti inject the currently vault login token into environment
+* Sidecar-Container defined in `argocd-bootstrap/argocd-values.yaml` as `extraContainer`
+  * runs `vault agent` to refresh token regulary
 
 ## encrpytion via SOPS
 
