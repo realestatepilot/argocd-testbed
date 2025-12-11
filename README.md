@@ -1,3 +1,5 @@
+> Project is archived because helm secrets integration is now much better via plugin method.
+
 # argocd-testbed
 
 Argocd acts as the heart of gitops driven deployments. Upgrading this can be challenging. You better test your setup before. This testbed can be used in situations where:
